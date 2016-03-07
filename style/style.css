@@ -1,0 +1,17 @@
+body {
+    background-color: black;
+    color: white;
+}
+
+#container {
+    display: inline;
+    height: 600px;
+}
+
+#panel {
+    float: right;
+}
+
+canvas {
+    border: 1px darkgrey solid;
+}
