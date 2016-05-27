@@ -1,5 +1,8 @@
-function Simulation(canvas) {
+function Simulation(canvas, orbitCanv, starCanv) {
     var manager = new RenderManager(canvas);
+    manager.addLayer(STAR_LAYER, starCanv, false);
+    manager.addLayer(ORBITS_LAYER, orbitCanv, true);
+    manager.addLayer(SOLAR_LAYER, canvas, true);
     var solarSystem = new SolarSystem(manager);
     var center = new Point((canvas.scrollWidth / 2), (canvas.scrollHeight / 2));
     var mouse = new Mouse(canvas);
@@ -9,9 +12,9 @@ function Simulation(canvas) {
     fillDom(solarSystem, db, center);
 
     this.update = function (now) {
+        camera.setMouse(mouse.getCoordinates());
         if (mouse.isOnCanvas()) {
             solarSystem.unpause();
-            camera.setMouse(mouse.getCoordinates());
             if (mouse.isDirty()) {
                 camera.zoom(mouse.getDelta());
                 mouse.notDirty();
@@ -35,8 +38,10 @@ function Simulation(canvas) {
 }
 
 window.onload = function () {
-    var canvas = $("myCanvas");
-    var simulation = new Simulation(canvas);
+    var canvas = $("canvas-system");
+    var orbitsLayer = $("canvas-orbits");
+    var starsLayer = $("canvas-stars");
+    var simulation = new Simulation(canvas, orbitsLayer, starsLayer);
 
     var tick = function (now) {
         simulation.update(now);

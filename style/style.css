@@ -14,4 +14,19 @@ body {
 
 canvas {
     border: 1px darkgrey solid;
+    position: absolute;
+    left: 0px;
+    right: 0px;
+}
+
+#canvas-stars {
+    z-index: 1;
+}
+
+#canvas-orbits {
+    z-index: 2;
+}
+
+#canvas-system {
+    z-index: 3;
 }

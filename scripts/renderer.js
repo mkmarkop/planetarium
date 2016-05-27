@@ -52,24 +52,26 @@ function Renderer(context, screen) {
     };
 }
 
-function RenderManager(canvas) {
-    var context = canvas.getContext("2d");
-    var screen = new Rect(0, 0, canvas.scrollWidth, canvas.scrollHeight);
-
+function Layer(context, screen, scalable) {
     var renderer = new Renderer(context, screen);
     var assets = [];
 
-    this.add = function (asset) {
+    this.addAsset = function (asset) {
         assets.push(asset);
     };
 
     this.pan = function (dx, dy) {
         assets.forEach(function (gfx) {
-            gfx.entity.rect.translate(dx, dy);
+            var drag = gfx.entity.drag ? gfx.entity.drag : 1;
+            gfx.entity.rect.translate(dx/drag, dy/drag);
         });
     };
 
     this.scale = function (amount) {
+        if (!scalable) {
+            return;
+        }
+        
         assets.forEach(function (gfx) {
             gfx.entity.rect.scale(amount);
             gfx.entity.scaleDistance(amount);
@@ -78,12 +80,58 @@ function RenderManager(canvas) {
 
     this.draw = function () {
         renderer.clear();
-        renderer.fillScreen("black");
         assets.forEach(function (gfx) {
-            // need to implement different layers, that's why always true for now
-            if (true || gfx.entity.rect.insideRect(screen)) {
+            if (gfx.alwaysVisible || 
+                    gfx.entity.rect.insideRect(screen)) {
                 gfx.draw(renderer);
             }
         });
     };
+}
+
+function RenderManager(canvas) {
+    var screen = new Rect(0, 0, canvas.scrollWidth, canvas.scrollHeight);
+    var layers = new Map();
+    var layerArray = [];
+
+    this.addLayer = function (name, canv, scalable) {
+        var context = canv.getContext("2d");
+        var layer = new Layer(context, screen, scalable);
+        layers.set(name, layer);
+        layerArray.push(layer);
+    }
+
+    this.add = function (layer, asset) {
+        layers.get(layer).addAsset(asset);
+    }
+
+    this.pan = function (dx, dy) {
+        layerArray.forEach(function (layer) {
+            layer.pan(dx, dy);
+        });
+    };
+
+    this.scale = function (amount) {
+        layerArray.forEach(function (layer) {
+            layer.scale(amount);
+        });
+    };
+
+    this.draw = function () {
+        layerArray.forEach(function (layer) {
+            layer.draw();
+        });
+    };
+
+    this.getWidth = function() {
+        return screen.getWidth();
+    }
+
+    this.getHeight = function() {
+        return screen.getHeight();
+    }
+
+    this.getScreen = function() {
+        return screen;
+    }
 }

@@ -49,25 +49,32 @@ function Celestial(reference, distance_in_au, rad, period) {
     };
 }
 
+function Dummy() {
+    this.rect = new Rect(0, 0, 1, 1);
+    this.scaleDistance = function(amount) {};
+}
+
+var dummy = new Dummy();
+
+function OrbitModel(reference, celestial) {
+
+    this.alwaysVisible = true;
+    this.entity = dummy;
+
+    this.draw = function(renderer) {
+        renderer.drawCircle(reference.rect.getCenter(), celestial.getDist(), 
+            1, ORBIT_COLOR, null);
+    };
+}
+
 function CelestialModel(celestial, fillColor, lineColor) {
 
-    var reference = celestial.getReference();
+    this.alwaysVisible = false;
     this.entity = celestial;
 
-    if (!(reference instanceof Celestial)) {
-        reference = null;
-    }
-
     this.draw = function (renderer) {
-        if (reference) {
-            renderer.drawCircle(reference.rect.getCenter(), celestial.getDist(), 1, ORBIT_COLOR, null);
-        }
-
         renderer.drawCircle(celestial.rect.getCenter(), celestial.rect.getWidth() / 2,
             2, fillColor, lineColor);
-
-        //renderer.drawRect(celestial.rect.getTop(), celestial.rect.getWidth(),
-        //    celestial.rect.getHeight(), 1, "#ffffff", null);
     };
 }
 
@@ -75,10 +82,15 @@ function SolarSystem(renderManager) {
     var bodies = new Map();
     var paused = false;
     var selected = "None";
+    var starfield = new Starfield(renderManager, 100);
 
     this.addCelestial = function (name, body, bodyModel) {
         bodies.set(name, body);
-        renderManager.add(bodyModel);
+        renderManager.add(SOLAR_LAYER, bodyModel);
+        var reference = body.getReference();
+        if (reference !== null && reference instanceof Celestial) {
+            renderManager.add(ORBITS_LAYER, new OrbitModel(reference, body));
+        }
     };
 
     this.getCelestial = function (name) {
@@ -109,6 +121,7 @@ function SolarSystem(renderManager) {
         bodies.forEach(function (value, key) {
             value.update(now);
         });
+
+        starfield.update(now);
     };
 }
-
